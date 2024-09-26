@@ -15,54 +15,70 @@ void colorCorners(std::vector<cv::Point2f> &corners, cv::Mat &R)
     // std::cout << std::endl;
 }
 
-void algorithm(cv::Mat &frame)
+std::vector<cv::Point2f> algorithm(cv::Mat &frame)
 {
-    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::makePtr<cv::aruco::Dictionary>(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100));
+    // cv::Ptr<cv::aruco::Dictionary> dictionary = cv::makePtr<cv::aruco::Dictionary>(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100));
+    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::makePtr<cv::aruco::Dictionary>(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL));
     std::vector<std::vector<cv::Point2f>> corners;
     std::vector<int> ids;
-    cv::Mat grey, greyTh;
+    cv::Mat grey;
+    // cv::Mat greyTh;
     cv::cvtColor(frame, grey, cv::COLOR_RGB2GRAY);
-    cv::threshold(grey, greyTh, 50, 255, cv::THRESH_OTSU);
+    // cv::threshold(grey, greyTh, 50, 255, cv::THRESH_OTSU);
 
 
-    cv::aruco::detectMarkers(greyTh, dictionary, corners, ids);
-    cv::Mat greyWarped;
+    cv::aruco::detectMarkers(grey, dictionary, corners, ids);
+    // cv::Mat greyWarped;
     if (ids.size()) {
         cv::Size winSize  = cv::Size( 10, 10 );
         cv::Size zeroZone = cv::Size( -1, -1 );
-        cv::TermCriteria criteria = cv::TermCriteria( cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 5000, 0.0001 );
+        cv::TermCriteria criteria = cv::TermCriteria( cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 50000, 0.00001 );
         // cv::Mat cornersMat;
 
         // for (const auto& corner : corners) {
         //     cornersMat.push_back(corner);
         // }
 
-        cv::cornerSubPix(greyTh, corners[0], winSize, zeroZone, criteria);
-        std::vector<cv::Point2f> targetCorners = {
-            cv::Point2f(0, 0),
-            cv::Point2f(100, 0),
-            cv::Point2f(100, 100),
-            cv::Point2f(0, 100)
-        };
+        cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        winSize = cv::Size(7, 7);
+        cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        winSize = cv::Size(5, 5);
+        cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        winSize = cv::Size(3, 3);
+        cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        winSize = cv::Size(2, 2);
+        cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // std::vector<cv::Point2f> targetCorners = {
+        //     cv::Point2f(0, 0),
+        //     cv::Point2f(100, 0),
+        //     cv::Point2f(100, 100),
+        //     cv::Point2f(0, 100)
+        // };
 
-        // Get the perspective transform
+        // // Get the perspective transform
 
 
-        corners.clear();
-        ids.clear();
-        std::vector<cv::Point2f> orig_corners;
+        // corners.clear();
+        // ids.clear();
+        // std::vector<cv::Point2f> orig_corners;
 
-        cv::aruco::detectMarkers(greyTh, dictionary, corners, ids);
+        // cv::aruco::detectMarkers(frame, dictionary, corners, ids);
         if (ids.size())
         {
-            cv::Mat M = cv::getPerspectiveTransform(corners[0], targetCorners);
-            cv::warpPerspective(grey, greyWarped, M, cv::Size(100, 100));
-            cv::aruco::detectMarkers(greyWarped, dictionary, corners, ids);
+            // cv::Mat M = cv::getPerspectiveTransform(corners[0], targetCorners);
+            // cv::warpPerspective(grey, greyWarped, M, cv::Size(100, 100));
+            // cv::aruco::detectMarkers(frame, dictionary, corners, ids);
             std::cout << "---------\nid: " << ids.size() << std::endl;
-            cv::perspectiveTransform(corners[0], orig_corners, M.inv());
-            for (auto &x : orig_corners) std::cout << x << std::endl;
-            std::cout << frame.size() << std::endl;
-            // colorCorners(orig_corners, frame);
+            // cv::perspectiveTransform(corners[0], orig_corners, M.inv());
+            // for (auto &x : orig_corners) std::cout << x << std::endl;
+            // std::cout << frame.size() << std::endl;
+            colorCorners(corners[0], frame);
 
             // for (size_t i = 0; i < corners.size(); ++i)
             // {
@@ -77,21 +93,41 @@ void algorithm(cv::Mat &frame)
             // cv::imshow("grey", greyWarped);
 
             cv::imshow("new window", frame);
+            return corners[0];
         }
 
     }
-    else cv::imshow("new window", grey);
+    else cv::imshow("new window", frame);
+    return {};
 }
+
+void testMaybeBetterMaybeNotIDontKnowProbablyNot(cv::Mat &frame, std::vector<cv::Point2f> &corners)
+{
+    if (!corners.size()) cv::imshow("testWindow", corners);
+    std::vector<cv::Point> int_corners(corners.begin(), corners.end());
+
+    // Draw the rectangle using the 4 corners as a closed polygon
+    const cv::Point* pts[1] = { int_corners.data() };
+    int npts = int_corners.size();
+
+    cv::Mat grey, greyTh, xored, blank;
+    blank = cv::Mat::zeros(cv::Size(900, 900), CV_8UC1);
+    cv::cvtColor(frame, grey, cv::COLOR_RGB2GRAY);
+    cv::threshold(grey, greyTh, 0, 255, cv::THRESH_OTSU);
+    // cv::rectangle(grey, cv::Rect(corners[0], corners[1] ));
+
+    cv::fillPoly(blank, pts, &npts, 1, cv::Scalar(255));
+
+    cv::imshow("testWindow", blank);
+
+
+}
+
 
 int main()
 {
-    cv::VideoCapture cap;
-    cap.open(0);
-    if (!cap.isOpened())
-    {
-        std::cout << "can not open camera";
-        return 1;
-    }
+    // cv::VideoCapture cap;
+    // cap.open(0);
     cv::Mat frame;
     cv::namedWindow("new window", cv::WINDOW_NORMAL);
     // while (true)
@@ -102,10 +138,27 @@ int main()
     //     char t = cv::waitKey(25);
     //     if (t == 27) break;
     // }
+    cv::VideoCapture cap(0);
+    cv::Mat cameraFrame;
+    while (true)
+    {
+        cap >> cameraFrame;
+        if (cameraFrame.empty())
+        {
+            return -1;
+            break;
+        }
+        algorithm(cameraFrame);
+        char t = cv::waitKey(25);
+        if (t == 27)
+            break;
+    }
+    // frame = cv::imread("C:/Users/archLinux/Downloads/image.png");
+    // std::vector<cv::Point2f> found_corners = algorithm(frame);
 
-    frame = cv::imread("C:/Users/archLinux/Downloads/image.png");
-    algorithm(frame);
-    cv::waitKey(0);
+    // cv::namedWindow("testWindow", cv::WINDOW_NORMAL);
+    // testMaybeBetterMaybeNotIDontKnowProbablyNot(frame, found_corners);
+    // cv::waitKey(0);
 
     return 0;
 }
