@@ -9,7 +9,7 @@ pushd build 2>/dev/null
 	do
 		if [ "$cmd" = 'q' ]
 		then
-			qmake CONFIG+=debug ..
+			qmake6 CONFIG+=debug ..
 			compiledb -n make
 			sed -i 's/"-mno-direct-extern-access",//' compile_commands.json
 		elif [ "$cmd" = 'b' ]

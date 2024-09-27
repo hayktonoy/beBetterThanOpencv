@@ -17,8 +17,15 @@ void colorCorners(std::vector<cv::Point2f> &corners, cv::Mat &R)
 
 std::vector<cv::Point2f> algorithm(cv::Mat &frame)
 {
-    // cv::Ptr<cv::aruco::Dictionary> dictionary = cv::makePtr<cv::aruco::Dictionary>(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100));
-    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::makePtr<cv::aruco::Dictionary>(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL));
+    // double alpha = 1.5;  // Contrast control (1.0-3.0)
+    // int beta = 50;       // Brightness control (0-100)
+
+    // // Adjust the brightness and contrast
+    // cv::Mat adjusted;
+    // frame.convertTo(frame, -1, alpha, beta);
+
+    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::makePtr<cv::aruco::Dictionary>(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100));
+    // cv::Ptr<cv::aruco::Dictionary> dictionary = cv::makePtr<cv::aruco::Dictionary>(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL));
     std::vector<std::vector<cv::Point2f>> corners;
     std::vector<int> ids;
     cv::Mat grey;
@@ -39,21 +46,21 @@ std::vector<cv::Point2f> algorithm(cv::Mat &frame)
         //     cornersMat.push_back(corner);
         // }
 
-        cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
-        winSize = cv::Size(7, 7);
-        cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
-        winSize = cv::Size(5, 5);
-        cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
-        winSize = cv::Size(3, 3);
-        cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
-        winSize = cv::Size(2, 2);
-        cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
         // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // winSize = cv::Size(7, 7);
         // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // winSize = cv::Size(5, 5);
         // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // winSize = cv::Size(3, 3);
         // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+        // winSize = cv::Size(2, 2);
         // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
-        // cv::cornerSubPix(grey, corners[0], winSize, zeroZone, criteria);
+
+        for (int i = 20; i >= 1; i--) {
+           std::cout << i << " " << i << std::endl;
+           cv::cornerSubPix(grey, corners[0], cv::Size(i, i), zeroZone, criteria);
+        }
+
         // std::vector<cv::Point2f> targetCorners = {
         //     cv::Point2f(0, 0),
         //     cv::Point2f(100, 0),
@@ -105,7 +112,7 @@ void testMaybeBetterMaybeNotIDontKnowProbablyNot(cv::Mat &frame, std::vector<cv:
 {
     if (!corners.size()) cv::imshow("testWindow", corners);
     std::vector<cv::Point> int_corners(corners.begin(), corners.end());
-
+    std::cout << "hello world!" << std::endl;
     // Draw the rectangle using the 4 corners as a closed polygon
     const cv::Point* pts[1] = { int_corners.data() };
     int npts = int_corners.size();
@@ -138,27 +145,28 @@ int main()
     //     char t = cv::waitKey(25);
     //     if (t == 27) break;
     // }
-    cv::VideoCapture cap(0);
-    cv::Mat cameraFrame;
-    while (true)
-    {
-        cap >> cameraFrame;
-        if (cameraFrame.empty())
-        {
-            return -1;
-            break;
-        }
-        algorithm(cameraFrame);
-        char t = cv::waitKey(25);
-        if (t == 27)
-            break;
-    }
-    // frame = cv::imread("C:/Users/archLinux/Downloads/image.png");
-    // std::vector<cv::Point2f> found_corners = algorithm(frame);
+    // cv::VideoCapture cap(0);
+    // cv::Mat cameraFrame;
+    // while (true)
+    // {
+    //     cap >> cameraFrame;
+    //     if (cameraFrame.empty())
+    //     {
+    //         return -1;
+    //         break;
+    //     }
+    //     algorithm(cameraFrame);
+    //     char t = cv::waitKey(25);
+    //     if (t == 27)
+    //         break;
+    // }
+    std::cout << "starting" << std::endl;
+    frame = cv::imread("C:/Users/archLinux/Downloads/image.png");
+    std::vector<cv::Point2f> found_corners = algorithm(frame);
 
     // cv::namedWindow("testWindow", cv::WINDOW_NORMAL);
     // testMaybeBetterMaybeNotIDontKnowProbablyNot(frame, found_corners);
-    // cv::waitKey(0);
+    cv::waitKey(0);
 
     return 0;
 }
