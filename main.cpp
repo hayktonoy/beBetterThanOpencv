@@ -3,9 +3,11 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/aruco.hpp>
 
-void colorCorners(std::vector<cv::Point2f> &corners, cv::Mat &R)
+#include <arucodetector.h>
+
+void colorCorners(std::vector<cv::Point2f> &corners, cv::Mat &R, const cv::Vec3b &color = cv::Vec3b(0,0,255))
 {
-    cv::Vec3b color(0,0,255);
+
     for (size_t j = 0; j < corners.size(); ++j)
     {
         // std::cout << corners[j];
@@ -24,7 +26,7 @@ std::vector<cv::Point2f> algorithm(cv::Mat &frame)
     // cv::Mat adjusted;
     // frame.convertTo(frame, -1, alpha, beta);
 
-    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::makePtr<cv::aruco::Dictionary>(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_100));
+    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::makePtr<cv::aruco::Dictionary>(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50));
     // cv::Ptr<cv::aruco::Dictionary> dictionary = cv::makePtr<cv::aruco::Dictionary>(cv::aruco::getPredefinedDictionary(cv::aruco::DICT_ARUCO_ORIGINAL));
     std::vector<std::vector<cv::Point2f>> corners;
     std::vector<int> ids;
@@ -126,6 +128,7 @@ void testMaybeBetterMaybeNotIDontKnowProbablyNot(cv::Mat &frame, std::vector<cv:
     cv::fillPoly(blank, pts, &npts, 1, cv::Scalar(255));
 
     cv::imshow("testWindow", blank);
+    cv::namedWindow("debugWindow");
 
 
 }
@@ -133,40 +136,29 @@ void testMaybeBetterMaybeNotIDontKnowProbablyNot(cv::Mat &frame, std::vector<cv:
 
 int main()
 {
-    // cv::VideoCapture cap;
-    // cap.open(0);
-    cv::Mat frame;
-    cv::namedWindow("new window", cv::WINDOW_NORMAL);
-    // while (true)
-    // {
-    //     cap.read(frame);
-    //     algorithm(frame);
-    //     // cv::imshow("new window", frame);
-    //     char t = cv::waitKey(25);
-    //     if (t == 27) break;
-    // }
-    // cv::VideoCapture cap(0);
-    // cv::Mat cameraFrame;
-    // while (true)
-    // {
-    //     cap >> cameraFrame;
-    //     if (cameraFrame.empty())
-    //     {
-    //         return -1;
-    //         break;
-    //     }
-    //     algorithm(cameraFrame);
-    //     char t = cv::waitKey(25);
-    //     if (t == 27)
-    //         break;
-    // }
-    std::cout << "starting" << std::endl;
-    frame = cv::imread("C:/Users/archLinux/Downloads/image.png");
-    std::vector<cv::Point2f> found_corners = algorithm(frame);
+    ArucoDetector detector(cv::aruco::DICT_4X4_50);
+    cv::Mat img = cv::imread("C:/Users/archLinux/Downloads/img2.png");
+    cv::Mat imgOrig, imgNormal;
 
-    // cv::namedWindow("testWindow", cv::WINDOW_NORMAL);
-    // testMaybeBetterMaybeNotIDontKnowProbablyNot(frame, found_corners);
-    cv::waitKey(0);
+    detector.processImg(img.clone());
+    auto corners = detector.getMarkerCorners();
 
+    cv::TermCriteria criteria = cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 5000, 0.01);
+    cv::Mat gray;
+    cv::cvtColor(img, gray, cv::COLOR_BGR2GRAY);
+    for (auto &corner : corners)cv::cornerSubPix(gray, corner, cv::Size(5, 5), cv::Size(-1, -1), criteria);
+    img.copyTo(imgOrig);
+    for (auto &x : corners) colorCorners(x, imgOrig, cv::Vec3b(255, 0, 0));
+    cv::imshow("originalSubPix", imgOrig);
+
+    corners=detector.getMarkerCorners();
+    detector.processImgMultipleSubPix();
+    corners=detector.getMarkerCorners();
+    img.copyTo(imgNormal);
+    for (auto &x : corners) colorCorners(x, imgNormal);
+    cv::imshow("normal", imgNormal);
+    // cv::namedWindow("testingWindow");
+    // cv::imshow("testingWindow", img);
+    cv::waitKey();
     return 0;
 }
