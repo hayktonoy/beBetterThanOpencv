@@ -48,6 +48,61 @@ void ArucoDetector::processImgMultipleSubPix()
     }
 }
 
+void ArucoDetector::processImgMultipleSubPixXelaci()
+{
+    cv::Mat gray, blurred, threshed;
+    cv::cvtColor(m_img, gray, cv::COLOR_BGR2GRAY);
+    cv::bilateralFilter(gray, blurred, 9, 75, 75);
+    cv::adaptiveThreshold(blurred, threshed, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 11, 2);
+
+    // cv::GaussianBlur(gray, gray, cv::Size(5, 5), 0);
+    cv::Size zeroZone = cv::Size(-1, -1);
+    cv::Size winSize = cv::Size(5, 5);
+    cv::TermCriteria criteria = cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 100, 0.001); // Adjusted criteria
+
+    // cv::imshow("testWindow", threshed);
+    // cv::cornerSubPix(threshed, m_markerCorners[i], cv::Size(j, j), zeroZone, criteria);
+    for (size_t i = 0; i < m_markerCorners.size(); ++i) {
+        // for (int j = 15; j >= 3; j--) {
+        //     cv::cornerSubPix(threshed, m_markerCorners[i], cv::Size(j, j), zeroZone, criteria);
+        // }
+        cv::cornerSubPix(threshed, m_markerCorners[i], winSize, zeroZone, criteria);
+    }
+
+    int maxCorners = 1;
+    double qualityLevel = 0.01;
+    double minDistance = 1;
+    int blockSize = 3;
+    bool useHarrisDetector = false;
+    double k = 0.04;
+
+    cv::Mat image;
+    cv::cvtColor(m_img, image, cv::COLOR_BGR2GRAY);
+
+    for (int j = 0; j < m_markerCorners.size(); ++j)
+    {
+        for (int i = 0; i < m_markerCorners[j].size(); ++i) {
+            int patchSize = 15;
+            cv::Rect roi(m_markerCorners[j][i].x - patchSize / 2, m_markerCorners[j][i].y - patchSize / 2, patchSize, patchSize);
+
+            roi &= cv::Rect(0, 0, image.cols, image.rows);
+
+            cv::Mat cornerPatch = image(roi);
+
+            std::vector<cv::Point2f> detectedCorners;
+            goodFeaturesToTrack(cornerPatch, detectedCorners, maxCorners, qualityLevel, minDistance, cv::Mat(), blockSize, useHarrisDetector, k);
+
+            if (detectedCorners.size() > 0) {
+                cv::Point2f refinedCorner = detectedCorners[0] + cv::Point2f(roi.x, roi.y);
+
+                cornerSubPix(image, std::vector<cv::Point2f>{refinedCorner}, winSize, zeroZone, criteria);
+
+                m_markerCorners[j][i] = refinedCorner;
+            }
+        }
+    }
+}
+
 std::vector<cv::Point2f> ArucoDetector::getMarkerById(int id) const
 {
     for(int i = 0; i < m_markerIds.size(); ++i)

@@ -43,6 +43,7 @@ public:
     bool getArucoInsideCornersAndGeometryById(int arucoId, std::vector<cv::Point2f> & allCorners,
                                               std::vector<cv::Point> &cornersByIndexOnArucoGrid, int arucoGridSize);
 
+    void processImgMultipleSubPixXelaci();
 private:
 
     bool checkForCorner(int m00, int m01, int m11, int m10); // values are 0 or 255
