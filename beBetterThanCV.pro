@@ -11,6 +11,7 @@ OPENCV_PATH = $$PWD/3rdParty/opencv_normal_taza
 
 # Include OpenCV headers
 INCLUDEPATH += $$OPENCV_PATH/include
+INCLUDEPATH += $$PWD/3rdParty/nlohman
 
 # Link libraries based on the configuration (debug or release)
 CONFIG(debug, debug|release) {
@@ -29,8 +30,12 @@ CONFIG(debug, debug|release) {
 SOURCES += \
         arucodetector.cpp \
         main.cpp \
-        testertoliinch.cpp
+        testertoliinch.cpp \
+        utils.cpp \
+        warppingtwoimageswithfeaturematcher.cpp
 
 HEADERS += \
     arucodetector.h \
-    testertoliinch.h
+    testertoliinch.h \
+    utils.h \
+    warppingtwoimageswithfeaturematcher.h

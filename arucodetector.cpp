@@ -53,31 +53,27 @@ void ArucoDetector::processImgMultipleSubPixXelaci()
     cv::Mat gray, blurred, threshed;
     cv::cvtColor(m_img, gray, cv::COLOR_BGR2GRAY);
     cv::bilateralFilter(gray, blurred, 9, 75, 75);
-    cv::adaptiveThreshold(blurred, threshed, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 11, 2);
+    // cv::adaptiveThreshold(blurred, threshed, 255, cv::ADAPTIVE_THRESH_GAUSSIAN_C, cv::THRESH_BINARY, 11, 2);
+    cv::threshold(blurred, threshed, 0, 255, cv::THRESH_BINARY | cv::THRESH_OTSU);
 
-    // cv::GaussianBlur(gray, gray, cv::Size(5, 5), 0);
     cv::Size zeroZone = cv::Size(-1, -1);
     cv::Size winSize = cv::Size(5, 5);
     cv::TermCriteria criteria = cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 100, 0.001); // Adjusted criteria
 
-    // cv::imshow("testWindow", threshed);
-    // cv::cornerSubPix(threshed, m_markerCorners[i], cv::Size(j, j), zeroZone, criteria);
     for (size_t i = 0; i < m_markerCorners.size(); ++i) {
-        // for (int j = 15; j >= 3; j--) {
-        //     cv::cornerSubPix(threshed, m_markerCorners[i], cv::Size(j, j), zeroZone, criteria);
-        // }
         cv::cornerSubPix(threshed, m_markerCorners[i], winSize, zeroZone, criteria);
     }
 
     int maxCorners = 1;
-    double qualityLevel = 0.01;
+    double qualityLevel = 0.001;
     double minDistance = 1;
     int blockSize = 3;
     bool useHarrisDetector = false;
     double k = 0.04;
 
-    cv::Mat image;
-    cv::cvtColor(m_img, image, cv::COLOR_BGR2GRAY);
+    cv::Mat image = blurred;
+
+    // cv::aruco::detectMarkers(image, m_dictionary, m_markerCorners, m_markerIds, m_detectorParams);
 
     for (int j = 0; j < m_markerCorners.size(); ++j)
     {
